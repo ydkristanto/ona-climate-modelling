@@ -1,6 +1,7 @@
 ---
-title: "A Tutorial on Ordered Network Analysis (ONA) in R"
+title: "A Tutorial on Ordered Network Analysis in R"
 subtitle: "Modelling Students' Mathematics and Collaborative Processes in Climate-Related Tasks"
+abstract: "This tutorial shows how to use Ordered Network Analysis (ONA) with R to study how students work collaboratively and use mathematics in climate-related modelling tasks. Step by step, the tutorial helps readers load the needed R packages, prepare their data, and build an ONA model. It explains how to set the unit of analysis, define action codes, group conversations, and choose a window size. The tutorial also shows how to understand the model results, such as how often actions are linked and how strong those links are. Finally, it explains how to create network visualisations, including mean and subtracted networks. By the end, readers will be able to use ONA in their own research to better understand student thinking and collaboration."
 author:
   - name: Yosep Dwi Kristanto
     url: https://people.usd.ac.id/~ydkristanto/
