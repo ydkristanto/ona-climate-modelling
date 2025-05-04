@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website: 
-  title: "ONA"
+  title: "ONA Tutorial"
   favicon: "favicon.png"
   site-url: "https://ydkristanto.github.io/ona-climate-modelling/"
   page-navigation: true
