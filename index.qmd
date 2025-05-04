@@ -1,0 +1,307 @@
+---
+title: "A Tutorial on Ordered Network Analysis (ONA) in R"
+subtitle: "Modelling Students' Mathematics and Collaborative Processes in Climate-Related Tasks"
+author:
+  - name: Yosep Dwi Kristanto
+    url: https://people.usd.ac.id/~ydkristanto/
+    affiliation: Department for STEM Didactics, Johannes Kepler University Linz, Austria
+    affiliation-url: https://www.jku.at/en/linz-school-of-education/organization/department-for-stem-didactics/
+    orcid: 0000-0003-1446-0422
+date: 2025-05-04
+lightbox: true
+format:
+  html:
+    toc: true
+    number-sections: true
+    smooth-scroll: true
+keywords: 
+  - climate change
+  - collaborative problem solving
+  - collaborative learning
+  - graphing
+  - graphs
+  - network analysis
+  - ordered network analysis
+  - R programming
+  - tutorial
+license: "CC BY"
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Installing and Loading Required Packages
+
+```{r}
+#| message: false
+#| warning: false
+
+# install.packages("tidyverse")
+# install.packages("readxl")
+# install.packages("tidyverse")
+# install.packages("tma", repos = c("https://cran.qe-libs.org", "https://cran.r studio.org"))
+# install.packages("ona", repos = c("https://cran.qe-libs.org", "https://cran.rstudio.org"))
+
+library(tidyverse)
+library(readxl)
+library(tma)
+library(ona)
+library(plotly)
+```
+
+## Preparing the Data for ONA
+
+```{r}
+raw_data <- read_excel(
+  "coding/20240926_transformed_coded.xlsx"
+)
+```
+
+```{r}
+data_wide <- raw_data |> 
+  filter(
+    scene == "cps",
+    !is.na(subject)
+  ) |> 
+  select(-start_time, -end_time, -end_time_ms) |> 
+  mutate(
+    C.B.1 = if_else(str_detect(code, "\\bC\\.B\\.1\\b"), 1, 0, missing = 0),
+    C.B.2 = if_else(str_detect(code, "\\bC\\.B\\.2\\b"), 1, 0, missing = 0),
+    C.B.3 = if_else(str_detect(code, "\\bC\\.B\\.3\\b"), 1, 0, missing = 0),
+    C.B.4 = if_else(str_detect(code, "\\bC\\.B\\.4\\b"), 1, 0, missing = 0),
+    C.M.1 = if_else(str_detect(code, "\\bC\\.M\\.1\\b"), 1, 0, missing = 0),
+    C.M.2 = if_else(str_detect(code, "\\bC\\.M\\.2\\b"), 1, 0, missing = 0),
+    C.M.3 = if_else(str_detect(code, "\\bC\\.M\\.3\\b"), 1, 0, missing = 0),
+    C.R.1 = if_else(str_detect(code, "\\bC\\.R\\.1\\b"), 1, 0, missing = 0),
+    C.R.2 = if_else(str_detect(code, "\\bC\\.R\\.2\\b"), 1, 0, missing = 0),
+    C.R.3 = if_else(str_detect(code, "\\bC\\.R\\.3\\b"), 1, 0, missing = 0),
+    C.R.4 = if_else(str_detect(code, "\\bC\\.R\\.4\\b"), 1, 0, missing = 0),
+    M.S.1 = if_else(str_detect(code, "\\bM\\.S\\.1\\b"), 1, 0, missing = 0),
+    M.S.2 = if_else(str_detect(code, "\\bM\\.S\\.2\\b"), 1, 0, missing = 0),
+    M.S.3 = if_else(str_detect(code, "\\bM\\.S\\.3\\b"), 1, 0, missing = 0),
+    M.R.1 = if_else(str_detect(code, "\\bM\\.R\\.1\\b"), 1, 0, missing = 0),
+    M.R.2 = if_else(str_detect(code, "\\bM\\.R\\.2\\b"), 1, 0, missing = 0),
+    M.R.3 = if_else(str_detect(code, "\\bM\\.R\\.3\\b"), 1, 0, missing = 0),
+    M.E.0 = if_else(str_detect(code, "\\bM\\.E\\.0\\b"), 1, 0, missing = 0),
+    M.E.1 = if_else(str_detect(code, "\\bM\\.E\\.1\\b"), 1, 0, missing = 0),
+    M.E.2 = if_else(str_detect(code, "\\bM\\.E\\.2\\b"), 1, 0, missing = 0)
+  ) |> 
+  select(-c(code, note))
+
+```
+
+```{r}
+data_simple <- data_wide |> 
+  mutate(
+    COL_Building = if_else(
+      C.B.1 + C.B.2 + C.B.3 + C.B.4 >= 1, 1, 0
+    ),
+    COL_Monitoring = if_else(
+      C.M.1 + C.M.2 + C.M.3 >= 1, 1, 0
+    ),
+    COL_Repairing = if_else(
+      C.R.1 + C.R.2 + C.R.3 + C.R.4 >= 1, 1, 0
+    ),
+    COG_Situational_Reasoning = if_else(
+      M.S.1 + M.S.2 + M.S.3 >= 1, 1, 0
+    ),
+    COG_Graphical_Reasoning = if_else(
+      M.R.1 + M.R.2 + M.R.3 >= 1, 1, 0
+    ),
+    COG_EGST = if_else(
+      M.E.0 + M.E.1 + M.E.2 >= 1, 1, 0
+    )
+  ) |> 
+  select(
+    -c(M.S.1, M.S.2, M.S.3,
+       M.R.1, M.R.2, M.R.3,
+       M.E.0, M.E.1, M.E.2),
+    -c(C.B.1, C.B.2, C.B.3, C.B.4,
+       C.M.1, C.M.2, C.M.3,
+       C.R.1, C.R.2, C.R.3, C.R.4)
+  )
+
+glimpse(data_simple)
+```
+
+## Constructing the ONA Model
+
+### Specifying the Unit of Analysis
+
+```{r}
+my_units <- c("subject")
+```
+
+### Specifying Codes
+
+```{r}
+my_codes <- c(
+  # Codes for collaborative processes:
+  "COL_Building", "COL_Monitoring", "COL_Repairing",
+  # Codes for emergent graphical shape thinking:
+  "COG_Situational_Reasoning", "COG_Graphical_Reasoning", "COG_EGST"
+)
+```
+
+### Specifying Conversations
+
+```{r}
+my_hoo_rules <- conversation_rules(
+  model_phase %in% UNIT$model_phase
+)
+```
+
+### Specifying the Window Size
+
+```{r}
+window_size <- 5
+```
+
+### Accumulating Connections
+
+```{r}
+accum_ona <- contexts(
+  x = data_simple,
+  hoo_rules = my_hoo_rules,
+  units_by = my_units
+) |> 
+  accumulate_contexts(
+    codes = my_codes,
+    decay.function = decay(simple_window, window_size = window_size),
+    return.ena.set = FALSE
+  )
+```
+
+### Constructing an ONA Model
+
+```{r}
+set_ona <- model(accum_ona)
+```
+
+## Summarising Key Model Outputs
+
+### Connection Counts
+
+```{r}
+head(set_ona$connection.counts, 3)
+```
+
+### Line Weights
+
+```{r}
+head(set_ona$line.weights, 3)
+```
+
+### ONA Points
+
+```{r}
+head(set_ona$points, 3)
+```
+
+### Rotation Matrix
+
+```{r}
+head(set_ona$rotation.matrix, 3)
+```
+
+## Visualising the ONA
+
+### Plotting the Mean Network
+
+```{r}
+ona:::plot.ena.ordered.set(
+  set_ona, 
+  title = "ONA Mean Network"
+) |> 
+  edges(
+    desaturate_edges_by = sqrt,
+    weights = colMeans(set_ona$line.weights),
+    # edge_size_multiplier = 1,
+    edge_arrow_saturation_multiplier = 1.5,
+    node_position_multiplier = 1,
+    edge_color = c("red")
+  ) |> 
+  nodes(
+    node_size_multiplier = .4,
+    node_position_multiplier = 1,
+    self_connection_color = c("red")
+  )
+```
+
+### Plotting an Individual Network and its Points
+
+```{r}
+ona:::plot.ena.ordered.set(
+  set_ona, 
+  title = "ONA Network for Anna"
+) |> 
+  units(
+    points = set_ona$points$ENA_UNIT$`Anna`,
+    points_color = "red",
+    show_mean = FALSE,
+    show_points = TRUE,
+    with_ci = FALSE
+  ) |> 
+  edges(
+    desaturate_edges_by = sqrt,
+    weights = set_ona$line.weights$ENA_UNIT$`Anna`,
+    # edge_size_multiplier = 1,
+    edge_arrow_saturation_multiplier = 1.5,
+    node_position_multiplier = 1,
+    edge_color = c("red")
+  ) |> 
+  nodes(
+    node_size_multiplier = .4,
+    node_position_multiplier = 1,
+    self_connection_color = c("red")
+  )
+```
+
+```{r}
+ona:::plot.ena.ordered.set(
+  set_ona, 
+  title = "ONA Network for Tamara"
+) |> 
+  units(
+    points = set_ona$points$ENA_UNIT$`Tamara`,
+    points_color = "blue",
+    show_mean = FALSE,
+    show_points = TRUE,
+    with_ci = FALSE
+  ) |> 
+  edges(
+    desaturate_edges_by = sqrt,
+    weights = set_ona$line.weights$ENA_UNIT$`Tamara`,
+    # edge_size_multiplier = 1,
+    edge_arrow_saturation_multiplier = 1.5,
+    node_position_multiplier = 1,
+    edge_color = c("blue")
+  ) |> 
+  nodes(
+    node_size_multiplier = .4,
+    node_position_multiplier = 1,
+    self_connection_color = c("blue")
+  )
+```
+
+### Plotting the Subtracted Network
+
+```{r}
+ona:::plot.ena.ordered.set(
+  set_ona, 
+  title = "Subtracted Network: Anna vs. Tamara"
+) |> 
+  edges(
+    desaturate_edges_by = sqrt,
+    weights = (colMeans(set_ona$line.weights$ENA_UNIT$Anna) - colMeans(set_ona$line.weights$ENA_UNIT$Tamara)) * 4,
+    # edge_size_multiplier = 1,
+    edge_arrow_saturation_multiplier = 1.5,
+    node_position_multiplier = 1,
+    edge_color = c("red", "blue")
+  ) |> 
+  nodes(
+    node_size_multiplier = .4,
+    node_position_multiplier = 1,
+    self_connection_color = c("red", "blue")
+  )
+```

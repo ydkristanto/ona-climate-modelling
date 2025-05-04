@@ -1,0 +1,24 @@
+project:
+  type: website
+  output-dir: docs
+
+website: 
+  title: "ONA"
+  favicon: "favicon.png"
+  site-url: "https://ydkristanto.github.io/ona-climate-modelling/"
+  page-navigation: true
+  bread-crumbs: true
+  twitter-card:
+    creator: "@yosepdwik"
+  open-graph: true
+  repo-url: https://github.com/ydkristanto/ona-climate-modelling
+  repo-actions: [edit, issue]
+  navbar: 
+    right: 
+      - icon: github
+        href: https://github.com/ydkristanto/ona-climate-modelling
+  page-footer: 
+    left: | 
+      © 2025 Johannes Kepler University Linz
+    right: | 
+      This website was built with [Quarto](https://quarto.org/){.external target="_blank"}.
